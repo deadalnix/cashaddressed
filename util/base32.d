@@ -291,6 +291,14 @@ size_t getSizeFromBase32(size_t length) {
 }
 
 size_t decode(
+	bool discardPartial = true,
+)(const ubyte[] str, ubyte[] data) in {
+	// assert(data.length >= getSizeFromBase32(str.length));
+} body {
+	return decode!(c => uint(c))(*( cast(const char[]*) &str), data);
+}
+
+size_t decode(
 	alias decodeChar,
 	bool discardPartial = true,
 )(const(char)[] str, ubyte[] data) in {
