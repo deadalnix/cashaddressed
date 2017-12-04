@@ -52,9 +52,8 @@ unittest {
 	assert(encodeCashAddr("bitcoincash", 8, hash) == "bitcoincash:ppm2qsznhks23z7629mms6s4cwef74vcwvn0h829pq");
 }
 
-bool decodeCashAddr(string addr, ref string prefix, ref ubyte ver, ref ubyte[20] hash) {
+bool decodeData(string addr, ref size_t prefixSize, ref ubyte[] data) {
 	bool lower, upper;
-	size_t prefixSize;
 	foreach (i, c; addr) {
 		if (c >= 'a' && c <= 'z') {
 			lower = true;
@@ -98,11 +97,10 @@ bool decodeCashAddr(string addr, ref string prefix, ref ubyte ver, ref ubyte[20]
 		return false;
 	}
 	
-	import std.ascii;
-	prefix = addr[0 .. prefixSize];
+	string prefix = addr[0 .. prefixSize];
 	
 	import std.array;
-	ubyte[] data = uninitializedArray!(ubyte[])(prefix.length + 43);
+	data = uninitializedArray!(ubyte[])(prefixSize + 43);
 	
 	// Fill in the prefix.
 	foreach (i, c; prefix) {
@@ -116,6 +114,16 @@ bool decodeCashAddr(string addr, ref string prefix, ref ubyte ver, ref ubyte[20]
 	foreach (i, c; addr[prefixSize + 1 .. $]) {
 		import util.base32;
 		data[prefixSize + 1 + i] = getFromBech32(c) & 0x1f;
+	}
+	
+	return true;
+}
+
+bool decodeCashAddr(string addr, ref string prefix, ref ubyte ver, ref ubyte[20] hash) {
+	ubyte[] data;
+	size_t prefixSize;
+	if (!decodeData(addr, prefixSize, data)) {
+		return false;
 	}
 	
 	// Verify the checksum.
@@ -133,6 +141,7 @@ bool decodeCashAddr(string addr, ref string prefix, ref ubyte ver, ref ubyte[20]
 		return false;
 	}
 	
+	prefix = addr[0 .. prefixSize];
 	hash = decoded[1 .. 21];
 	return true;
 }
