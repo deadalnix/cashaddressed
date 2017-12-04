@@ -17,6 +17,17 @@ size_t getBase32Size(size_t length) {
 }
 
 size_t encode(
+	bool discardPartial = false,
+)(const(ubyte)[] data, ubyte[] buffer) in {
+	assert(buffer.length >= getBase32Size(data.length));
+} body {
+	return encode!(c => char(c & 0x1f), discardPartial)(
+		data,
+		*(cast(char[]*) &buffer),
+	);
+}
+
+size_t encode(
 	alias encodeChar,
 	bool discardPartial = false,
 )(const(ubyte)[] data, char[] buffer) in {
